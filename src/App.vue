@@ -12,19 +12,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Html5QrcodeScanner } from "html5-qrcode"
 
-const scanResult = ref(null)
-let scanner = null
+const scanResult = ref<string | null>(null)
+let scanner: Html5QrcodeScanner | null = null
 
-const onScanSuccess = (decodedText) => {
+const onScanSuccess = (decodedText: string) => {
   // Зупиняємо сканер після успішного зчитування (опціонально)
   scanResult.value = decodedText
+
+  // Додамо вібрацію для кращого UX
+  if (navigator.vibrate) {
+    navigator.vibrate(100)
+  }
 }
 
-const onScanFailure = (error) => {
+const onScanFailure = (error: string) => {
   // Тут можна логувати помилки, але зазвичай вони надто часті (поки камера шукає код)
   // console.warn(`QR error: ${error}`);
 }
@@ -44,9 +49,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (scanner) {
-    scanner.clear() // Важливо: звільняємо камеру при виході з компонента
+    // Важливо: звільняємо камеру при виході з компонента
+    scanner.clear().catch(error => {
+      console.error("Failed to clear html5QrcodeScanner", error)
+    })
   }
-});
+})
 </script>
 
 <style scoped>
